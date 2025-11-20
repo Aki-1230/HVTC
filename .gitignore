@@ -1,0 +1,13 @@
+# python cache
+__pycache__/
+**/__pycache__
+*.py[cod]
+*$py.class
+
+# training & testing data
+checkpoints/
+results/
+
+tensorboard/
+
+datasets/
