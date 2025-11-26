@@ -167,8 +167,11 @@ class BaseModel(ABC):
                 net = getattr(self, 'net' + name)
 
                 if isinstance(net, torch.nn.ModuleDict):
-                    state_dicts = {key: module.state_dict() for key, module in net.items()}
-                    torch.save(state_dicts, save_path)
+                    new_state_dicts = {}
+                    for key, module in net.items():
+                        for k, v in module.state_dict().items():
+                            new_state_dicts[f'{key}.{k}'] = v
+                    torch.save(new_state_dicts, save_path)
                 else:
                     if len(self.gpu_ids) > 0 and torch.cuda.is_available():
                         torch.save(net.module.cpu().state_dict(), save_path)

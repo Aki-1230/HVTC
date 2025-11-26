@@ -3,11 +3,18 @@ __pycache__/
 **/__pycache__
 *.py[cod]
 *$py.class
+.ipynb_checkpoints/
 
 # training & testing data
-checkpoints/
-results/
-
-tensorboard/
+checkpoints
+results
+tensorboard
+datasets
+cs_line_plots
 
 datasets/
+
+checkpoints/
+results/
+tmp/
+tensorboard/

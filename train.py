@@ -65,12 +65,6 @@ if __name__ == '__main__':
     model = create_model(opt)      # create a model given opt.model and other options
     model.setup(opt)               # regular setup: load and print networks; create schedulers
     
-    # # check if the model has gradient
-    # for name, param in model.named_parameters():
-    #     if param.grad is not None:
-    #         print(f"Layer {name} has gradient:\n{param.grad}")
-    #     else:
-    #         print(f"Layer {name} has no gradient(frozen)")
 
     visualizer = Visualizer(opt)   # create a visualizer that display/save images and plots
     total_iters = 0                # the total number of training iterations
@@ -111,8 +105,7 @@ if __name__ == '__main__':
                 save_result = total_iters % opt.update_html_freq == 0
                 model.compute_visuals()
                 visualizer.display_current_results(model.get_current_visuals(), epoch, save_result)
-
-            tensorBoard(writer, model, epoch, epoch_iter, total_iters, opt)
+                tensorBoard(writer, model, epoch, epoch_iter, total_iters, opt) # tensorboard save
 
             if total_iters % opt.print_freq == 0:    # print training losses and save logging information to the disk
                 losses = model.get_current_losses()
