@@ -11,6 +11,7 @@ results
 tensorboard
 datasets
 cs_line_plots
+check.py
 
 datasets/
 
@@ -18,3 +19,4 @@ checkpoints/
 results/
 tmp/
 tensorboard/
+cs_vis_4lines_smooth/
