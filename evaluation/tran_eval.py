@@ -6,6 +6,36 @@ from skimage.metrics import peak_signal_noise_ratio as getpsnr
 import argparse
 from pathlib import Path
 import shutil
+import torch
+import torch.nn.functional as F
+from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
+import torchvision.transforms as T
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+lpips_model = LearnedPerceptualImagePatchSimilarity(net_type='vgg').to(device)
+
+to_tensor = T.Compose([
+    T.ToPILImage(),
+    T.Resize((256, 256)),    # ⚠ 你的图像尺寸如果不是 256，可以改成和 real_B 一样
+    T.ToTensor(),            # [0,1]
+])
+
+@torch.no_grad()
+def getlpips_cv2(img_cv2_real, img_cv2_fake):
+    """
+    img_cv2_real, img_cv2_fake: numpy arrays read by cv2 (BGR, HWC, uint8)
+    """
+    # 1. cv2: BGR → RGB
+    real = img_cv2_real[..., ::-1]
+    fake = img_cv2_fake[..., ::-1]
+
+    # 2. numpy → tensor, [H, W, C] → [C, H, W], 自动转换 float32
+    real = to_tensor(real).unsqueeze(0).to(device)
+    fake = to_tensor(fake).unsqueeze(0).to(device)
+
+    # 3. LPIPS 需要输入为 [0,1]，已满足
+    score = lpips_model(real, fake)
+
+    return score.item()
 
 def getssim(im1, im2):
     data = ssim(im1, im2, channel_axis=-1)
@@ -46,6 +76,7 @@ def compute_metrics(filepath, choose_index, choose_model):
     datas_ssim_B = []
     datas_psnr_A = []
     datas_psnr_B = []
+    datas_lpips_B = []
 
     if choose_model == 'Single':
         for i in range(num):    
@@ -55,7 +86,9 @@ def compute_metrics(filepath, choose_index, choose_model):
             ssim_B = getssim(real_B,fake_B)
             datas_ssim_B.append(ssim_B)
             psnr_B = getpsnr(real_B,fake_B)
-            datas_psnr_B.append(psnr_B)        
+            datas_psnr_B.append(psnr_B)  
+            lpips_B = getlpips_cv2(real_B,fake_B)
+            datas_lpips_B.append(lpips_B)
     else:
         for i in range(num):
             fake_A = cv2.imread(os.path.join(filepath, fake_A_names[i]), 1)
@@ -88,6 +121,8 @@ def compute_metrics(filepath, choose_index, choose_model):
             output('ssim', 'B', fake_B_names, datas_ssim_B)
             print('-----------------------------------------------------------------')
             output('psnr', 'B', fake_B_names, datas_psnr_B)
+            print('-----------------------------------------------------------------')
+            output('lpips', 'B', fake_B_names, datas_lpips_B)
             print('-----------------------------------------------------------------')    
     
     else:   
